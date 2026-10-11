@@ -1,33 +1,30 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, ExternalLink, ArrowRight, Eye } from 'lucide-react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Maximize2, ExternalLink } from 'lucide-react';
 import type { Project } from '../data/portfolioData';
 import { ProjectCardPreview } from './ProjectCardPreview';
 import { sound } from '../utils/audio';
-import type { GalleryTheme } from './GalleryLighting';
 
 interface HorizonStreamViewProps {
   projects: Project[];
   activeProject: Project;
   onSelectProject: (project: Project) => void;
-  onInspectProject: (project: Project) => void;
-  theme: GalleryTheme;
+  onExpandProject: (project: Project) => void;
 }
 
 export function HorizonStreamView({
   projects,
   activeProject,
   onSelectProject,
-  onInspectProject,
-  theme,
+  onExpandProject,
 }: HorizonStreamViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  const isLight = theme === 'linen';
+  const activeIndex = projects.findIndex((p) => p.id === activeProject.id);
 
-  // Scroll active project into view when activeProject changes
+  // Smooth scroll into view when activeProject changes
   useEffect(() => {
     if (!containerRef.current) return;
     const cardEl = containerRef.current.querySelector(`[data-project-id="${activeProject.id}"]`);
@@ -36,7 +33,53 @@ export function HorizonStreamView({
     }
   }, [activeProject.id]);
 
-  // Handle horizontal mouse drag
+  // Navigate next / prev
+  const handlePrev = useCallback(() => {
+    if (activeIndex > 0) {
+      sound.playTransition();
+      onSelectProject(projects[activeIndex - 1]);
+    }
+  }, [activeIndex, projects, onSelectProject]);
+
+  const handleNext = useCallback(() => {
+    if (activeIndex < projects.length - 1) {
+      sound.playTransition();
+      onSelectProject(projects[activeIndex + 1]);
+    }
+  }, [activeIndex, projects, onSelectProject]);
+
+  // Wheel listener: user can scroll naturally (vertical or horizontal wheel) to slide through projects!
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
+    let accumulatedDelta = 0;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      accumulatedDelta += Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+
+      if (wheelTimeout) clearTimeout(wheelTimeout);
+
+      wheelTimeout = setTimeout(() => {
+        if (accumulatedDelta > 45) {
+          handleNext();
+        } else if (accumulatedDelta < -45) {
+          handlePrev();
+        }
+        accumulatedDelta = 0;
+      }, 50);
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      if (wheelTimeout) clearTimeout(wheelTimeout);
+    };
+  }, [handleNext, handlePrev]);
+
+  // Mouse Drag to Glide
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
     setIsDragging(true);
@@ -56,69 +99,18 @@ export function HorizonStreamView({
     setIsDragging(false);
   };
 
-  // Convert vertical wheel to horizontal wheel smoothly
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY * 1.2;
-      }
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, []);
-
-  const handlePrev = () => {
-    sound.playTransition();
-    const currIdx = projects.findIndex((p) => p.id === activeProject.id);
-    if (currIdx > 0) {
-      onSelectProject(projects[currIdx - 1]);
-    }
-  };
-
-  const handleNext = () => {
-    sound.playTransition();
-    const currIdx = projects.findIndex((p) => p.id === activeProject.id);
-    if (currIdx < projects.length - 1) {
-      onSelectProject(projects[currIdx + 1]);
-    }
-  };
-
-  const activeIndex = projects.findIndex((p) => p.id === activeProject.id);
-
   return (
-    <div className="relative w-full h-full min-h-[calc(100vh-140px)] flex flex-col justify-center overflow-hidden py-12">
-      {/* Floor Track Line with Distance Measurement Markers */}
-      <div className="absolute bottom-28 left-0 right-0 h-[1px] pointer-events-none z-0">
-        <div
-          className={`w-full h-full transition-colors duration-700 ${
-            isLight ? 'bg-stone-300' : 'bg-stone-800'
-          }`}
-        />
-        <div className="flex justify-around text-[9px] font-mono opacity-40 pt-1">
-          <span>SEC. 00.0m</span>
-          <span>SEC. 15.0m</span>
-          <span>SEC. 30.0m</span>
-          <span>SEC. 45.0m</span>
-          <span>SEC. 60.0m</span>
-        </div>
-      </div>
+    <div className="relative w-full h-full min-h-[calc(100vh-140px)] flex flex-col justify-center overflow-hidden py-8 select-none">
+      {/* Background Architectural Track Guideline */}
+      <div className="absolute top-1/2 left-0 right-0 h-[1px] -translate-y-1/2 bg-white/[0.05] pointer-events-none z-0" />
 
-      {/* Floating Left / Right Nav Buttons */}
-      <div className="pointer-events-none absolute inset-x-4 md:inset-x-8 top-1/2 -translate-y-1/2 z-30 flex justify-between">
+      {/* Floating Animated Left / Right Navigation Chevrons */}
+      <div className="pointer-events-none absolute inset-x-4 md:inset-x-10 top-1/2 -translate-y-1/2 z-30 flex justify-between">
         <button
           onClick={handlePrev}
           disabled={activeIndex <= 0}
-          className={`pointer-events-auto p-4 rounded-xl border backdrop-blur-xl transition-all shadow-lg group ${
-            isLight
-              ? 'bg-stone-100/90 border-stone-300 text-stone-900 hover:bg-white disabled:opacity-20'
-              : 'bg-[#121316]/90 border-stone-800 text-stone-100 hover:bg-stone-800 disabled:opacity-20'
-          }`}
-          title="Önceki Eser (←)"
+          className="pointer-events-auto p-4 rounded-full bg-[#131418]/90 backdrop-blur-xl border border-white/10 text-white hover:bg-white/15 hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none transition-all shadow-2xl group"
+          title="Önceki Proje"
         >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
@@ -126,168 +118,143 @@ export function HorizonStreamView({
         <button
           onClick={handleNext}
           disabled={activeIndex >= projects.length - 1}
-          className={`pointer-events-auto p-4 rounded-xl border backdrop-blur-xl transition-all shadow-lg group ${
-            isLight
-              ? 'bg-stone-100/90 border-stone-300 text-stone-900 hover:bg-white disabled:opacity-20'
-              : 'bg-[#121316]/90 border-stone-800 text-stone-100 hover:bg-stone-800 disabled:opacity-20'
-          }`}
-          title="Sonraki Eser (→)"
+          className="pointer-events-auto p-4 rounded-full bg-[#131418]/90 backdrop-blur-xl border border-white/10 text-white hover:bg-white/15 hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none transition-all shadow-2xl group"
+          title="Sonraki Proje"
         >
           <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
 
-      {/* Horizontal Promenade Runway Track */}
+      {/* Main Horizontal Runway */}
       <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className={`relative z-10 w-full overflow-x-auto overflow-y-hidden no-scrollbar flex items-center gap-10 md:gap-16 px-8 md:px-24 py-6 select-none ${
+        className={`relative z-10 w-full overflow-x-auto overflow-y-hidden no-scrollbar flex items-center gap-8 md:gap-16 px-8 md:px-28 py-6 ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
-        {projects.map((project) => {
+        {projects.map((project, idx) => {
           const isActive = project.id === activeProject.id;
+          const offset = idx - activeIndex;
 
           return (
             <div
               key={project.id}
               data-project-id={project.id}
               onClick={() => {
-                if (!isActive) {
+                if (isActive) {
+                  sound.playInspect();
+                  onExpandProject(project);
+                } else {
                   sound.playTransition();
                   onSelectProject(project);
                 }
               }}
               onMouseEnter={() => sound.playHover()}
-              className={`relative shrink-0 w-[350px] sm:w-[500px] lg:w-[680px] rounded-2xl transition-all duration-500 transform-gpu ${
+              className={`relative shrink-0 w-[350px] sm:w-[500px] lg:w-[680px] rounded-3xl transition-all duration-700 ease-out transform-gpu cursor-pointer group ${
                 isActive
-                  ? 'scale-100 opacity-100 z-20'
-                  : 'scale-96 opacity-60 hover:opacity-90 hover:scale-98 z-10'
+                  ? 'scale-100 opacity-100 z-20 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)]'
+                  : 'scale-92 opacity-35 hover:opacity-70 hover:scale-95 z-10'
               }`}
+              style={{
+                transform: `perspective(1000px) rotateY(${offset * -4}deg) scale(${isActive ? 1 : 0.92})`,
+              }}
             >
-              {/* Monolith Container */}
+              {/* Card Shell */}
               <div
-                className={`relative rounded-2xl border transition-all duration-500 overflow-hidden flex flex-col ${
-                  isLight
-                    ? 'bg-[#ffffff] border-stone-300/90 shadow-monolith-light text-stone-900'
-                    : theme === 'aluminum'
-                    ? 'bg-[#1d1f24] border-stone-700 shadow-monolith text-stone-100'
-                    : 'bg-[#13151a] border-stone-800/90 shadow-monolith text-stone-100'
-                }`}
+                className={`relative rounded-3xl border transition-all duration-500 overflow-hidden flex flex-col bg-[#131419] border-white/10 group-hover:border-white/25`}
                 style={{
-                  borderTopColor: isActive ? project.accentColor : undefined,
+                  borderTopColor: isActive ? project.accentColor : 'rgba(255, 255, 255, 0.1)',
                   borderTopWidth: isActive ? '3px' : '1px',
                 }}
               >
-                {/* Architectural Catalog Placard Header */}
-                <div
-                  className={`px-6 py-4 border-b flex items-center justify-between text-xs font-mono tracking-wider ${
-                    isLight ? 'border-stone-200 bg-stone-50' : 'border-stone-800 bg-black/20'
-                  }`}
-                >
+                {/* Background Giant Watermark Index */}
+                <div className="absolute top-2 right-4 font-syne text-[8rem] sm:text-[10rem] font-black text-white/[0.03] select-none pointer-events-none leading-none">
+                  {project.index}
+                </div>
+
+                {/* Card Top Label Strip */}
+                <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between text-xs font-mono relative z-10">
                   <div className="flex items-center gap-2.5">
                     <span
-                      className="w-2 h-2 rounded-xs"
+                      className="w-2 h-2 rounded-full transition-transform group-hover:scale-125"
                       style={{ backgroundColor: project.accentColor }}
                     />
-                    <span className="font-bold">
-                      CAT. REF [{project.index}] // {project.categoryLabel.toUpperCase()}
+                    <span className="font-bold tracking-wider text-white">
+                      [{project.index}] {project.categoryLabel.toUpperCase()}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className="opacity-60">{project.badge}</span>
-                    <span className="opacity-40">•</span>
-                    <span className="opacity-80 font-bold">{project.year}</span>
+                  <div className="flex items-center gap-3 text-stone-400">
+                    <span>{project.badge}</span>
+                    <span>•</span>
+                    <span className="font-bold text-white">{project.year}</span>
                   </div>
                 </div>
 
-                {/* Installation Curated Artwork Visual */}
-                <div className="relative h-56 sm:h-64 lg:h-76 overflow-hidden bg-stone-900 group/img">
+                {/* Hero Visual Area with Animated Hover Matting */}
+                <div className="relative h-60 sm:h-72 lg:h-84 overflow-hidden bg-black/60">
                   <img
                     src={project.image}
                     alt={project.title}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/img:scale-103"
+                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
                         'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
                     }}
                   />
 
-                  {/* Architectural Crop Marks & Vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  {/* Vignette Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#131419] via-[#131419]/25 to-transparent pointer-events-none" />
 
-                  {/* Inspection Trigger on Hover */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-xs">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sound.playInspect();
-                        onInspectProject(project);
-                      }}
-                      className="px-5 py-2.5 rounded-lg bg-stone-100 text-stone-950 font-syne font-bold text-xs tracking-wider flex items-center gap-2 shadow-2xl hover:scale-105 transition-all"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>ESERİ İNCELE & SİMÜLASYON</span>
-                    </button>
+                  {/* Floating Click-to-Expand Prompt Banner */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 backdrop-blur-xs">
+                    <div className="px-6 py-3 rounded-full bg-white text-stone-950 font-syne font-bold text-xs tracking-wider flex items-center gap-2.5 shadow-2xl transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                      <Maximize2 className="w-4 h-4 text-amber-600" />
+                      <span>İNCELE & CANLI SİMÜLASYON</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Placard Body */}
-                <div className="p-6 md:p-8 space-y-5 flex-1 flex flex-col justify-between">
+                {/* Card Information Body */}
+                <div className="p-6 md:p-8 space-y-4 relative z-10 flex-1 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <h3 className="font-syne text-2xl md:text-3xl font-extrabold tracking-tight">
-                      {project.title}
-                    </h3>
-                    <p
-                      className={`text-xs md:text-sm leading-relaxed ${
-                        isLight ? 'text-stone-600' : 'text-stone-400'
-                      }`}
-                    >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-syne text-2xl md:text-3xl font-extrabold text-white tracking-tight group-hover:text-amber-300 transition-colors">
+                        {project.title}
+                      </h3>
+                      <Maximize2 className="w-4 h-4 text-stone-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <p className="text-xs md:text-sm text-stone-400 leading-relaxed line-clamp-2">
                       {project.subtitle}
                     </p>
                   </div>
 
-                  {/* Physical Exhibit Mini-Widget Test Station */}
+                  {/* Live Mini Preview Widget */}
                   <ProjectCardPreview project={project} />
 
-                  {/* Material & Stack Specifications */}
-                  <div className="pt-1 flex flex-wrap gap-1.5">
+                  {/* Tech Stack Specs */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
                     {project.techStack.map((tech) => (
                       <span
                         key={tech}
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
-                          isLight
-                            ? 'bg-stone-100 border-stone-300 text-stone-700'
-                            : 'bg-white/[0.03] border-white/10 text-stone-300'
-                        }`}
+                        className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-white/[0.04] border border-white/[0.08] text-stone-300"
                       >
                         {tech}
                       </span>
                     ))}
                   </div>
 
-                  {/* Bottom Action Triggers */}
-                  <div className="pt-3 flex items-center gap-2 border-t border-stone-200 dark:border-stone-800">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sound.playInspect();
-                        onInspectProject(project);
-                      }}
-                      className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all shadow-xs group/btn ${
-                        isLight
-                          ? 'bg-stone-900 text-white hover:bg-stone-800'
-                          : 'bg-stone-100 text-stone-950 hover:bg-white'
-                      }`}
-                    >
-                      <span>İnteraktif Laboratuvar & Detay</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
+                  {/* Bottom Prompt Strip */}
+                  <div className="pt-2 flex items-center justify-between text-xs font-mono text-stone-400 border-t border-white/[0.06]">
+                    <span className="flex items-center gap-1.5 text-amber-400 font-semibold">
+                      <span>Detay & Simülasyon için karta tıklayın</span>
+                      <span>➔</span>
+                    </span>
 
                     <a
                       href={project.githubUrl}
@@ -297,14 +264,11 @@ export function HorizonStreamView({
                         e.stopPropagation();
                         sound.playTick();
                       }}
-                      className={`p-2.5 rounded-lg border transition-colors ${
-                        isLight
-                          ? 'bg-stone-100 border-stone-300 text-stone-700 hover:text-stone-950'
-                          : 'bg-white/[0.04] border-white/10 text-stone-300 hover:text-white'
-                      }`}
-                      title="GitHub Kaynak Kodu"
+                      className="p-1.5 rounded hover:text-white transition-colors flex items-center gap-1 text-[11px]"
+                      title="GitHub Kaynağı"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <span>GitHub</span>
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                 </div>

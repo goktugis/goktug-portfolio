@@ -1,25 +1,27 @@
 import { useState, useEffect } from 'react';
-import { X, ExternalLink, GitBranch, Check, Copy, Layers, Code, Terminal, Eye } from 'lucide-react';
+import { X, ExternalLink, GitBranch, Check, Copy, Layers, Code, Terminal, Sparkles } from 'lucide-react';
 import type { Project } from '../data/portfolioData';
 import { ProjectLiveSandbox } from './ProjectLiveSandbox';
 import { sound } from '../utils/audio';
-import type { GalleryTheme } from './GalleryLighting';
 
 interface DeepDiveModalProps {
   project: Project | null;
   onClose: () => void;
-  theme: GalleryTheme;
 }
 
-export function DeepDiveModal({ project, onClose, theme }: DeepDiveModalProps) {
+export function DeepDiveModal({ project, onClose }: DeepDiveModalProps) {
   const [copiedClone, setCopiedClone] = useState(false);
   const [activeTab, setActiveTab] = useState<'sandbox' | 'architecture' | 'code'>('sandbox');
-  const isLight = theme === 'linen';
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (project) {
       sound.playInspect();
       setActiveTab('sandbox');
+      // Trigger smooth scale-in animation
+      requestAnimationFrame(() => setIsVisible(true));
+    } else {
+      setIsVisible(false);
     }
   }, [project]);
 
@@ -34,312 +36,274 @@ export function DeepDiveModal({ project, onClose, theme }: DeepDiveModalProps) {
     setTimeout(() => setCopiedClone(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 backdrop-blur-2xl bg-black/75 transition-all">
-      {/* Backdrop */}
-      <div className="absolute inset-0" onClick={onClose} />
+  const handleClose = () => {
+    sound.playTick();
+    setIsVisible(false);
+    setTimeout(onClose, 300);
+  };
 
-      {/* Main Exhibition Vitrine Container */}
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-0 md:p-6 backdrop-blur-3xl bg-black/85 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      {/* Backdrop click */}
+      <div className="absolute inset-0" onClick={handleClose} />
+
+      {/* Fullscreen Expansion Monolith Window */}
       <div
-        className={`relative z-10 w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-2xl border flex flex-col scrollbar-thin transition-colors duration-300 ${
-          isLight
-            ? 'bg-[#faf9f6] border-stone-300 shadow-monolith-light text-stone-900'
-            : theme === 'aluminum'
-            ? 'bg-[#18191e] border-stone-700 shadow-monolith text-stone-100'
-            : 'bg-[#111216] border-stone-800 shadow-monolith text-stone-100'
+        className={`relative z-10 w-full h-full max-w-[1600px] max-h-screen md:max-h-[96vh] rounded-none md:rounded-3xl border-0 md:border border-white/12 bg-[#0e0f14] text-stone-100 shadow-[0_0_90px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden transform transition-all duration-500 ease-out ${
+          isVisible ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-8 opacity-0'
         }`}
       >
-        {/* Header Bar */}
-        <div
-          className={`sticky top-0 z-20 px-6 py-4 border-b flex items-center justify-between backdrop-blur-md ${
-            isLight
-              ? 'bg-[#faf9f6]/95 border-stone-200'
-              : 'bg-[#111216]/95 border-stone-800'
-          }`}
-        >
-          <div className="flex items-center gap-3">
+        {/* Fixed Header Bar */}
+        <div className="shrink-0 px-6 md:px-10 py-4 bg-[#121319] border-b border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-3 md:gap-4">
             <span
-              className="text-xs font-mono font-bold px-2 py-0.5 rounded"
+              className="text-xs font-mono font-bold px-2.5 py-1 rounded-full text-white"
               style={{
-                backgroundColor: `${project.accentColor}20`,
-                color: project.accentColor,
-                border: `1px solid ${project.accentColor}40`,
+                backgroundColor: `${project.accentColor}30`,
+                border: `1px solid ${project.accentColor}60`,
               }}
             >
-              SALON [{project.index}] // {project.categoryLabel.toUpperCase()}
+              PROJE [{project.index}] // {project.categoryLabel.toUpperCase()}
             </span>
-            <h2 className="font-syne text-lg md:text-xl font-bold tracking-tight">{project.title}</h2>
+            <h2 className="font-syne text-xl md:text-2xl font-extrabold tracking-tight text-white">
+              {project.title}
+            </h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <a
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => sound.playTick()}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-mono transition-colors ${
-                isLight
-                  ? 'bg-stone-100 border-stone-300 hover:bg-stone-200 text-stone-800'
-                  : 'bg-white/[0.04] border-white/10 hover:bg-white/10 text-stone-200'
-              }`}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/12 border border-white/10 text-xs font-mono text-white transition-colors"
             >
-              <GitBranch className="w-3.5 h-3.5" />
+              <GitBranch className="w-3.5 h-3.5 text-amber-400" />
               <span>GitHub</span>
               <ExternalLink className="w-3 h-3 opacity-60" />
             </a>
 
             <button
-              onClick={() => {
-                sound.playTick();
-                onClose();
-              }}
-              className={`p-2 rounded border transition-colors ${
-                isLight
-                  ? 'bg-stone-100 border-stone-300 hover:bg-stone-200 text-stone-800'
-                  : 'bg-white/[0.04] border-white/10 hover:bg-white/10 text-stone-200'
-              }`}
+              onClick={handleClose}
+              className="px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/20 border border-white/15 text-xs font-mono font-bold text-white transition-all flex items-center gap-2 group"
             >
-              <X className="w-5 h-5" />
+              <span>KAPAT</span>
+              <X className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             </button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 md:p-8 space-y-8">
-          {/* Top Curatorial Artwork & Metadata */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-5 relative rounded-xl overflow-hidden border border-stone-300 dark:border-stone-800 bg-stone-900 shadow-md">
-              <img
-                src={project.image}
-                alt={project.title}
-                className="w-full h-56 sm:h-64 object-cover object-top"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
-                }}
-              />
-              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-xs font-mono text-white">
-                <span className="px-2 py-0.5 rounded bg-black/75 backdrop-blur-md">
-                  {project.badge}
-                </span>
-                <span className="bg-black/75 px-2 py-0.5 rounded">{project.year}</span>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 space-y-4">
-              <div>
-                <h3 className="font-syne text-xl md:text-2xl font-bold mb-1.5">{project.subtitle}</h3>
-                <p className="text-sm opacity-80 leading-relaxed font-sans">{project.description}</p>
-              </div>
-
-              {/* Material & Stack Specifications */}
-              <div className="flex flex-wrap gap-1.5">
-                {project.techStack.map((tech) => (
-                  <span
-                    key={tech}
-                    className={`px-2.5 py-1 rounded text-xs font-mono border ${
-                      isLight
-                        ? 'bg-stone-100 border-stone-300 text-stone-700'
-                        : 'bg-white/[0.04] border-white/10 text-stone-300'
-                    }`}
-                  >
-                    {tech}
+        {/* Scrollable Exhibition Content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-thin">
+          {/* Dual Column Layout: Left Column = Narrative & Media / Right Column = Live Interactive Sandbox */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Left Column: Visual, Narrative & Engineering Highlights */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Artwork Visual */}
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-xl group">
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="w-full h-64 sm:h-80 object-cover object-top transition-transform duration-700 group-hover:scale-103"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono text-white">
+                  <span className="px-2.5 py-1 rounded bg-black/70 backdrop-blur-md border border-white/20">
+                    {project.badge}
                   </span>
-                ))}
+                  <span className="text-stone-300 font-bold">Yıl: {project.year}</span>
+                </div>
               </div>
 
-              {/* Terminal Clone Command */}
-              <div
-                className={`flex items-center gap-2 p-2.5 rounded-lg border font-mono text-xs ${
-                  isLight
-                    ? 'bg-stone-100 border-stone-300 text-stone-800'
-                    : 'bg-black/40 border-stone-800 text-stone-300'
-                }`}
-              >
-                <Terminal className="w-4 h-4 opacity-50 shrink-0" />
-                <span className="truncate select-all">{cloneCommand}</span>
-                <button
-                  onClick={copyClone}
-                  className={`ml-auto shrink-0 p-1.5 rounded transition-colors ${
-                    isLight ? 'hover:bg-stone-200' : 'hover:bg-white/10'
-                  }`}
-                  title="Klon Komutunu Kopyala"
-                >
-                  {copiedClone ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Exhibition Navigation Tabs */}
-          <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-2">
-            <button
-              onClick={() => {
-                sound.playTick();
-                setActiveTab('sandbox');
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-mono font-semibold transition-all ${
-                activeTab === 'sandbox'
-                  ? isLight
-                    ? 'bg-stone-900 text-white shadow-xs'
-                    : 'bg-white/15 text-white shadow-xs'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              <span>Canlı İnteraktif Simülatör</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playTick();
-                setActiveTab('architecture');
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-mono font-semibold transition-all ${
-                activeTab === 'architecture'
-                  ? isLight
-                    ? 'bg-stone-900 text-white shadow-xs'
-                    : 'bg-white/15 text-white shadow-xs'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>Sistem Mimarisi & Şema</span>
-            </button>
-
-            {project.architecture.codeSnippet && (
-              <button
-                onClick={() => {
-                  sound.playTick();
-                  setActiveTab('code');
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-mono font-semibold transition-all ${
-                  activeTab === 'code'
-                    ? isLight
-                      ? 'bg-stone-900 text-white shadow-xs'
-                      : 'bg-white/15 text-white shadow-xs'
-                    : 'opacity-60 hover:opacity-100'
-                }`}
-              >
-                <Code className="w-4 h-4" />
-                <span>Çekirdek Algoritma</span>
-              </button>
-            )}
-          </div>
-
-          {/* Tab 1: Live Interactive Sandbox */}
-          {activeTab === 'sandbox' && (
-            <div className="space-y-6">
-              <ProjectLiveSandbox project={project} />
-
-              {/* Highlights */}
+              {/* Title & Narrative Description */}
               <div className="space-y-3">
-                <h4 className="text-xs font-mono uppercase tracking-wider opacity-60">
-                  ÖNE ÇIKAN MÜHENDİSLİK BAŞARILARI
+                <h3 className="font-syne text-2xl font-bold text-white tracking-tight">
+                  {project.subtitle}
+                </h3>
+                <p className="text-sm text-stone-300 leading-relaxed font-sans">
+                  {project.description}
+                </p>
+              </div>
+
+              {/* Engineering Highlights */}
+              <div className="space-y-3 pt-2 border-t border-white/[0.08]">
+                <h4 className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold">
+                  ÖNE ÇIKAN MÜHENDİSLİK ÖZELLİKLERİ
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="space-y-2">
                   {project.highlights.map((h, i) => (
                     <div
                       key={i}
-                      className={`p-3.5 rounded-lg border text-xs flex items-start gap-2.5 ${
-                        isLight
-                          ? 'bg-stone-100/70 border-stone-200 text-stone-800'
-                          : 'bg-white/[0.02] border-stone-800 text-stone-300'
-                      }`}
+                      className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-stone-300 flex items-start gap-3"
                     >
                       <span
                         className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
                         style={{ backgroundColor: project.accentColor }}
                       />
-                      <span>{h}</span>
+                      <span className="leading-relaxed">{h}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Tab 2: Architecture & Diagram */}
-          {activeTab === 'architecture' && (
-            <div className="space-y-6">
-              <div
-                className={`p-6 rounded-xl border space-y-4 ${
-                  isLight
-                    ? 'bg-stone-100/70 border-stone-200'
-                    : 'bg-black/30 border-stone-800'
-                }`}
-              >
-                <h4 className="text-xs font-mono uppercase tracking-wider opacity-60">MİMARİ GENEL BAKIŞ</h4>
-                <p className="text-sm leading-relaxed">{project.architecture.overview}</p>
-
-                {project.architecture.algorithmDetails && (
-                  <div
-                    className={`p-3.5 rounded-lg border font-mono text-xs ${
-                      isLight
-                        ? 'bg-white border-stone-300 text-stone-800'
-                        : 'bg-white/[0.02] border-stone-800 text-stone-300'
-                    }`}
-                  >
-                    <span className="opacity-60 block mb-1">// Algoritmik Detay</span>
-                    {project.architecture.algorithmDetails}
-                  </div>
-                )}
-
-                {project.architecture.diagram && (
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-mono opacity-60">// Sistem Akış Boru Hattı Diyagramı</span>
-                    <pre
-                      className={`p-4 rounded-lg border font-mono text-xs overflow-x-auto leading-relaxed ${
-                        isLight
-                          ? 'bg-stone-900 border-stone-800 text-stone-100'
-                          : 'bg-black/60 border-stone-800 text-stone-300'
-                      }`}
+              {/* Tech Stack Pills */}
+              <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                <h4 className="text-xs font-mono uppercase tracking-wider text-stone-400">
+                  TEKNOLOJİ YIĞINI & KÜTÜPHANELER
+                </h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {project.techStack.map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1 rounded-lg text-xs font-mono bg-white/[0.04] border border-white/[0.08] text-stone-200"
                     >
-                      {project.architecture.diagram}
-                    </pre>
-                  </div>
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Terminal Clone Command */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-black/60 border border-white/10 font-mono text-xs">
+                <Terminal className="w-4 h-4 text-stone-400 shrink-0" />
+                <span className="text-stone-300 truncate select-all">{cloneCommand}</span>
+                <button
+                  onClick={copyClone}
+                  className="ml-auto shrink-0 p-1.5 rounded-lg bg-white/[0.08] hover:bg-white/15 text-stone-300 hover:text-white transition-colors"
+                  title="Klon Komutunu Kopyala"
+                >
+                  {copiedClone ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Live Interactive Sandbox & Architectural Blueprint */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Tab Navigation */}
+              <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
+                <button
+                  onClick={() => {
+                    sound.playTick();
+                    setActiveTab('sandbox');
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                    activeTab === 'sandbox'
+                      ? 'bg-amber-400 text-stone-950 shadow-md'
+                      : 'text-stone-400 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Canlı İnteraktif Simülatör</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    sound.playTick();
+                    setActiveTab('architecture');
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                    activeTab === 'architecture'
+                      ? 'bg-amber-400 text-stone-950 shadow-md'
+                      : 'text-stone-400 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Sistem Mimarisi & Şema</span>
+                </button>
+
+                {project.architecture.codeSnippet && (
+                  <button
+                    onClick={() => {
+                      sound.playTick();
+                      setActiveTab('code');
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                      activeTab === 'code'
+                        ? 'bg-amber-400 text-stone-950 shadow-md'
+                        : 'text-stone-400 hover:text-white hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    <Code className="w-4 h-4" />
+                    <span>Çekirdek Algoritma</span>
+                  </button>
                 )}
               </div>
 
-              {/* Metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {project.architecture.metrics.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`p-3.5 rounded-lg border font-mono text-center ${
-                      isLight
-                        ? 'bg-stone-100/70 border-stone-200'
-                        : 'bg-white/[0.02] border-stone-800'
-                    }`}
-                  >
-                    <span className="text-[11px] opacity-60 block mb-1">{m.label}</span>
-                    <span className="text-sm font-bold font-syne" style={{ color: project.accentColor }}>
-                      {m.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+              {/* Tab 1: Live Interactive Sandbox */}
+              {activeTab === 'sandbox' && (
+                <div className="space-y-6">
+                  {/* Sandbox Execution Station */}
+                  <ProjectLiveSandbox project={project} />
 
-          {/* Tab 3: Code Snippet */}
-          {activeTab === 'code' && project.architecture.codeSnippet && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs font-mono opacity-60">
-                <span>// TypeScript / Algoritmik Uygulama</span>
-                <span>Production Ready</span>
-              </div>
-              <pre
-                className={`p-5 rounded-xl border font-mono text-xs overflow-x-auto leading-relaxed ${
-                  isLight
-                    ? 'bg-stone-900 border-stone-800 text-stone-100'
-                    : 'bg-black/80 border-stone-800 text-stone-300'
-                }`}
-              >
-                {project.architecture.codeSnippet}
-              </pre>
+                  {/* Vitest Benchmark / Architecture Metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                    {project.architecture.metrics.map((m, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] font-mono text-center"
+                      >
+                        <span className="text-[11px] text-stone-400 block mb-1">{m.label}</span>
+                        <span className="text-sm font-bold text-white" style={{ color: project.accentColor }}>
+                          {m.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Architectural Overview & Diagram */}
+              {activeTab === 'architecture' && (
+                <div className="space-y-6">
+                  <div className="p-6 rounded-2xl bg-[#0a0c10] border border-white/[0.08] space-y-4">
+                    <h4 className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold">
+                      MİMARİ GENEL BAKIŞ
+                    </h4>
+                    <p className="text-sm text-stone-200 leading-relaxed font-sans">
+                      {project.architecture.overview}
+                    </p>
+
+                    {project.architecture.algorithmDetails && (
+                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] font-mono text-xs text-stone-300">
+                        <span className="text-amber-400 block mb-1 font-bold">// Algoritmik Detay</span>
+                        {project.architecture.algorithmDetails}
+                      </div>
+                    )}
+
+                    {project.architecture.diagram && (
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-mono text-stone-400">// Sistem Akış Boru Hattı Diyagramı</span>
+                        <pre className="p-5 rounded-xl bg-black/80 border border-white/10 font-mono text-xs text-cyan-300/95 overflow-x-auto leading-relaxed">
+                          {project.architecture.diagram}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Code Snippet */}
+              {activeTab === 'code' && project.architecture.codeSnippet && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs font-mono text-stone-400">
+                    <span>// TypeScript / Algoritmik Uygulama</span>
+                    <span>Production Ready</span>
+                  </div>
+                  <pre className="p-6 rounded-2xl bg-black/90 border border-white/10 font-mono text-xs text-emerald-300 overflow-x-auto leading-relaxed">
+                    {project.architecture.codeSnippet}
+                  </pre>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

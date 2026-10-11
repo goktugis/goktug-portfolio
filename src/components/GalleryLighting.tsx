@@ -5,10 +5,9 @@ export type GalleryTheme = 'obsidian' | 'linen' | 'aluminum';
 
 interface GalleryLightingProps {
   activeProject: Project;
-  theme: GalleryTheme;
 }
 
-export function GalleryLighting({ activeProject, theme }: GalleryLightingProps) {
+export function GalleryLighting({ activeProject }: GalleryLightingProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
@@ -38,76 +37,31 @@ export function GalleryLighting({ activeProject, theme }: GalleryLightingProps) 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Gallery Overhead Track Spotlight focused on central stage
+      // 1. Subtle warm overhead gallery track spotlight
       const spotX = width / 2;
       const spotY = height * 0.45;
-      const spotlightRadius = Math.max(width, height) * 0.6;
-
-      const trackLight = ctx.createRadialGradient(spotX, spotY * 0.6, 20, spotX, spotY, spotlightRadius);
-
-      if (theme === 'linen') {
-        // Warm natural travertine sunlight
-        trackLight.addColorStop(0, 'rgba(255, 250, 240, 0.45)');
-        trackLight.addColorStop(0.5, 'rgba(240, 235, 225, 0.15)');
-        trackLight.addColorStop(1, 'rgba(246, 244, 239, 0)');
-      } else if (theme === 'aluminum') {
-        // Clean neutral white studio daylight
-        trackLight.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
-        trackLight.addColorStop(0.6, 'rgba(200, 205, 215, 0.04)');
-        trackLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      } else {
-        // Atelier Obsidian: Warm halogen gallery pool
-        trackLight.addColorStop(0, 'rgba(255, 236, 214, 0.08)');
-        trackLight.addColorStop(0.4, 'rgba(235, 220, 200, 0.03)');
-        trackLight.addColorStop(1, 'rgba(14, 15, 18, 0)');
-      }
+      const trackLight = ctx.createRadialGradient(spotX, spotY * 0.5, 30, spotX, spotY, Math.max(width, height) * 0.65);
+      trackLight.addColorStop(0, 'rgba(255, 235, 210, 0.055)');
+      trackLight.addColorStop(0.5, 'rgba(235, 220, 200, 0.02)');
+      trackLight.addColorStop(1, 'rgba(11, 12, 15, 0)');
 
       ctx.fillStyle = trackLight;
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Interactive Visitor Loupe / Ambient Cursor Glow
-      const visitorLight = ctx.createRadialGradient(
+      // 2. Interactive torch light following cursor
+      const cursorLight = ctx.createRadialGradient(
         mouseRef.current.x,
         mouseRef.current.y,
         0,
         mouseRef.current.x,
         mouseRef.current.y,
-        320
+        280
       );
+      cursorLight.addColorStop(0, 'rgba(255, 255, 255, 0.025)');
+      cursorLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-      if (theme === 'linen') {
-        visitorLight.addColorStop(0, 'rgba(180, 83, 9, 0.04)');
-        visitorLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      } else {
-        visitorLight.addColorStop(0, 'rgba(255, 255, 255, 0.035)');
-        visitorLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      }
-
-      ctx.fillStyle = visitorLight;
+      ctx.fillStyle = cursorLight;
       ctx.fillRect(0, 0, width, height);
-
-      // 3. Subtle Architectural Floor Registration Marks
-      ctx.strokeStyle = theme === 'linen' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
-
-      // Draw thin crosshairs at gallery margins
-      const margin = 40;
-      const crossSize = 8;
-      const corners = [
-        [margin, margin],
-        [width - margin, margin],
-        [margin, height - margin],
-        [width - margin, height - margin],
-      ];
-
-      corners.forEach(([cx, cy]) => {
-        ctx.beginPath();
-        ctx.moveTo(cx - crossSize, cy);
-        ctx.lineTo(cx + crossSize, cy);
-        ctx.moveTo(cx, cy - crossSize);
-        ctx.lineTo(cx, cy + crossSize);
-        ctx.stroke();
-      });
 
       animationId = requestAnimationFrame(render);
     };
@@ -119,19 +73,19 @@ export function GalleryLighting({ activeProject, theme }: GalleryLightingProps) 
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationId);
     };
-  }, [theme, activeProject]);
+  }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#0b0c0f]">
       {/* Canvas Layer */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Tactile Paper / Plinth Grain Texture */}
-      <div className="absolute inset-0 bg-grain pointer-events-none" />
+      {/* Tactile Grain Texture */}
+      <div className="absolute inset-0 bg-grain opacity-60 pointer-events-none" />
 
-      {/* Architectural Subtle Ambient Color Accent (Warm & Controlled, not neon) */}
+      {/* Controlled Soft Amber Ambient Glow */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full blur-[140px] opacity-15 transition-all duration-1000 ease-out pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] rounded-full blur-[160px] opacity-10 transition-colors duration-1000 ease-out pointer-events-none"
         style={{
           backgroundColor: activeProject.accentColor,
         }}
