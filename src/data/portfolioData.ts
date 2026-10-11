@@ -1,5 +1,14 @@
+export interface ProjectArchitecture {
+  overview: string;
+  algorithmDetails?: string;
+  diagram?: string;
+  codeSnippet?: string;
+  metrics: { label: string; value: string }[];
+}
+
 export interface Project {
   id: string;
+  index: string;
   title: string;
   subtitle: string;
   category: 'ai-llm' | 'security' | 'enterprise' | 'ml-data' | 'fullstack';
@@ -10,31 +19,31 @@ export interface Project {
   image: string;
   githubUrl: string;
   liveUrl?: string;
+  accentColor: string;
+  accentGlow: string;
+  gradient: string;
+  coords: { x: number; y: number }; // Relative position on the Galaxy map (0-1000)
+  connections: string[]; // Connected project IDs on the galaxy map
   description: string;
   highlights: string[];
   techStack: string[];
-  architecture: {
-    overview: string;
-    algorithmDetails?: string;
-    diagram?: string;
-    codeSnippet?: string;
-    metrics: { label: string; value: string }[];
-  };
+  architecture: ProjectArchitecture;
 }
 
 export const CATEGORIES = [
-  { id: 'all', label: 'Tüm Projeler' },
-  { id: 'ai-llm', label: 'Yapay Zeka & Ajanlar' },
-  { id: 'security', label: 'Siber Güvenlik & Kripto' },
-  { id: 'enterprise', label: 'Kurumsal & Full-Stack' },
-  { id: 'ml-data', label: 'Veri Bilimi & ML' },
+  { id: 'all', label: 'Tüm Eserler', count: 9 },
+  { id: 'ai-llm', label: 'Yapay Zeka & Ajanlar', count: 2 },
+  { id: 'security', label: 'Siber Güvenlik & Kripto', count: 2 },
+  { id: 'enterprise', label: 'Kurumsal & Full-Stack', count: 2 },
+  { id: 'ml-data', label: 'Veri Bilimi & ML', count: 3 },
 ] as const;
 
 export const PROJECTS: Project[] = [
   {
     id: 'neuro-shield',
+    index: '01',
     title: 'NeuroShield',
-    subtitle: 'Enterprise Zero-Trust LLM Guardrail & Threat Simulator',
+    subtitle: 'Kurumsal Zero-Trust LLM Güvenlik Kalkanı & Tehdit Simülatörü',
     category: 'security',
     categoryLabel: 'Siber Güvenlik & LLM',
     badge: 'OWASP LLM01 Uyumlu',
@@ -42,15 +51,20 @@ export const PROJECTS: Project[] = [
     featured: true,
     image: '/images/neuro-shield.jpg',
     githubUrl: 'https://github.com/goktugis/neuro-shield',
+    accentColor: '#06b6d4',
+    accentGlow: 'rgba(6, 182, 212, 0.45)',
+    gradient: 'from-cyan-500 via-sky-600 to-blue-700',
+    coords: { x: 300, y: 220 },
+    connections: ['synapse-flow', 'aura-cipher'],
     description: 'Büyük Dil Modelleri (LLM) için prompt injection, talimat ezme, DAN personası ve veri sızıntılarını sıfır hata toleransıyla önleyen kurumsal savunma kalkanı. Sahte pozitifleri (false-positive) sıfıra indirmek için deterministik algoritmalar ve Shannon Entropi analizi kullanır.',
     highlights: [
       'Resmi NVI Mod 10 TCKN ve ISO/IEC 7812 Luhn kredi kartı algoritmasıyla %100 kesin PII maskeleme',
-      'Shannon Entropi Formülü ($H(X)$) ile gizlenmiş/obfuscated base64 zararlı yük tespiti',
+      'Shannon Entropi Formülü (H(X)) ile gizlenmiş/obfuscated base64 zararlı yük tespiti',
       'Zero-Width görünmez karakter ayıklama ve ChatML belirteç süzgeci',
       '21/21 Kapsamlı Vitest birim ve entegrasyon testi doğrulaması',
       'Canary Token kontrolü ile model içi prompt ifşasını durduran Çıktı Koruma Duvarı'
     ],
-    techStack: ['React 19', 'TypeScript', 'Vitest', 'Vite', 'TailwindCSS', 'Docker', 'OWASP Top 10'],
+    techStack: ['React 19', 'TypeScript', 'Vitest', 'Vite', 'TailwindCSS 4', 'Docker', 'OWASP Top 10'],
     architecture: {
       overview: '5 katmanlı filtreleme hattı: Girdi Normalizasyonu -> Sezgisel Heuristik Injection Tespiti -> KVKK Algoritmik Maskeleme -> Semantik Benzerlik -> Çıktı Koruma Duvarı (Canary Token & Komut Engelleme).',
       algorithmDetails: 'TC Kimlik: NVI Mod 10 ((7*Tek - Çift) mod 10 = d10). Luhn: Her 2. basamak 2 ile çarpılır, >9 ise 9 çıkarılır. Entropi: H(X) = -Σ P(x) log2 P(x), >4.85 bit şüpheli yük alarmı tetikler.',
@@ -59,15 +73,14 @@ export const PROJECTS: Project[] = [
         ▼ 1. Katman: Zero-Width Karakter Ayıklama & Unicode Normalizasyonu
         ▼ 2. Katman: Prompt Injection, DAN & ChatML Tag Blokajı
         ▼ 3. Katman: Algoritmik KVKK / PII Maskeleme (TCKN & Luhn Kart)
-        ▼ 4. Katman: Shannon Entropi ($H(X) > 4.85$) Zararlı Yük Tespiti
+        ▼ 4. Katman: Shannon Entropi (H(X) > 4.85) Zararlı Yük Tespiti
         │
-        ▼── GÜVENLİ LLM PROXY
+        ▼─── GÜVENLİ LLM PROXY
         │
         ▼ 5. Katman: Çıktı Koruma Duvarı (Canary Token Leakage & rm -rf Blokajı)
-        ▼
-[ Güvenli & Arındırılmış Yanıt ]`,
+        ▼ [ Güvenli & Arındırılmış Yanıt ]`,
       codeSnippet: `// Shannon Entropi Hesabı
-function calculateShannonEntropy(str: string): number {
+export function calculateShannonEntropy(str: string): number {
   const len = str.length;
   if (len === 0) return 0;
   const freq: Record<string, number> = {};
@@ -87,8 +100,9 @@ function calculateShannonEntropy(str: string): number {
   },
   {
     id: 'synapse-flow',
+    index: '02',
     title: 'SynapseFlow',
-    subtitle: 'Autonomous Agent & Visual DAG Workflow Orchestrator',
+    subtitle: 'Otonom Ajan & Görsel DAG İş Akışı Orkestratörü',
     category: 'ai-llm',
     categoryLabel: 'Yapay Zeka & Ajanlar',
     badge: 'Kahn DAG & React 19',
@@ -96,9 +110,14 @@ function calculateShannonEntropy(str: string): number {
     featured: true,
     image: '/images/synapse-flow.jpg',
     githubUrl: 'https://github.com/goktugis/synapse-flow',
+    accentColor: '#a855f7',
+    accentGlow: 'rgba(168, 85, 247, 0.45)',
+    gradient: 'from-purple-500 via-fuchsia-600 to-indigo-700',
+    coords: { x: 500, y: 150 },
+    connections: ['neuro-shield', 'aura-cipher', 'planpilot'],
     description: 'Karmaşık yapay zeka ajanlarını, veri boru hatlarını ve asenkron görevleri görsel bir tuval üzerinde orkestre eden yüksek performanslı Directed Acyclic Graph (DAG) yürütme motoru. Neon Cubic Bezier bağlantı hatları, Kahn algoritması ile topolojik sıralama ve derinlemesine döngü (cycle) koruması sunar.',
     highlights: [
-      'Kahn Algoritması ile $O(V + E)$ karmaşıklığında deterministik topolojik sıralama ve çalıştırma hattı',
+      'Kahn Algoritması ile O(V + E) karmaşıklığında deterministik topolojik sıralama ve çalıştırma hattı',
       'Derinlemesine Arama (DFS) ile döngüsel bağımlılıkları ve sonsuz döngüleri anında tespit eden koruma mekanizması',
       'İnteraktif Cubic Bezier neon bağlantı kabloları ve serbest sürüklenebilir düğüm tuvali',
       'Canlı Ajan Simülasyonu: Beklemede, Çalışıyor, Tamamlandı ve Hata durumlarının gerçek zamanlı veri akışı görselleştirmesi',
@@ -144,8 +163,9 @@ export function topologicalSort(nodes: Node[], edges: Edge[]): string[] {
   },
   {
     id: 'aura-cipher',
+    index: '03',
     title: 'AuraCipher',
-    subtitle: 'Zero-Knowledge Cryptographic Vault & Visual Steganography Lab',
+    subtitle: 'Zero-Knowledge Kriptografik Kasa & Görsel Steganografi Lab',
     category: 'security',
     categoryLabel: 'Kriptografi & Siber Güvenlik',
     badge: 'AES-256-GCM & LSB',
@@ -153,6 +173,11 @@ export function topologicalSort(nodes: Node[], edges: Edge[]): string[] {
     featured: true,
     image: '/images/aura-cipher.jpg',
     githubUrl: 'https://github.com/goktugis/aura-cipher',
+    accentColor: '#10b981',
+    accentGlow: 'rgba(16, 185, 129, 0.45)',
+    gradient: 'from-emerald-500 via-teal-600 to-green-700',
+    coords: { x: 700, y: 240 },
+    connections: ['neuro-shield', 'synapse-flow'],
     description: 'Askeri düzeyde kimlik doğrulamalı AES-256-GCM şifreleme, 100.000 iterasyonlu PBKDF2 anahtar türetimi ve tarayıcı içi LSB (Least Significant Bit) görsel steganografi motorunu bir araya getiren sıfır-bilgi (zero-knowledge) güvenlik laboratuvarı.',
     highlights: [
       'Görsel Steganografi (LSB): Şifrelenmiş bayt dizilerini taşıyıcı PNG piksellerinin RGB kanallarının en önemsiz bitlerine enjekte eder',
@@ -173,7 +198,7 @@ export function topologicalSort(nodes: Node[], edges: Edge[]): string[] {
                                                     ▼
                                     [ Görünmez Şifreli PNG ]`,
       codeSnippet: `// Web Crypto API AES-256-GCM Entegrasyonu
-async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) {
+export async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) {
   return await crypto.subtle.encrypt(
     { name: 'AES-256-GCM', iv, tagLength: 128 },
     key,
@@ -190,8 +215,9 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'han-kebap-steakhouse',
+    index: '04',
     title: 'Han Kebap & Steakhouse',
-    subtitle: 'Ultra-Luxury Culinary Experience & Reservation Platform',
+    subtitle: 'Ultra-Lüks Gastronomi Deneyimi & Rezervasyon Platformu',
     category: 'fullstack',
     categoryLabel: 'Lüks Gastronomi & Web',
     badge: 'Charred Wood & Gold UI',
@@ -199,6 +225,11 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     featured: true,
     image: '/images/han-kebap.jpg',
     githubUrl: 'https://github.com/goktugis/han-kebap-steakhouse',
+    accentColor: '#f59e0b',
+    accentGlow: 'rgba(245, 158, 11, 0.45)',
+    gradient: 'from-amber-500 via-orange-600 to-yellow-700',
+    coords: { x: 800, y: 440 },
+    connections: ['planpilot', 'dietitian-app'],
     description: 'Geleneksel Türk kebap mirası ile modern dry-aged steakhouse kültürünü buluşturan, yanık meşe ve altın varak estetiğiyle tasarlanmış, interaktif pişme derecesi simülatörüne sahip lüks restoran web deneyimi.',
     highlights: [
       'İnteraktif Et Pişme Derecesi Seçicisi (Rare, Medium Rare, Medium, Well-Done) ile gerçek zamanlı et görseli dönüşümü',
@@ -218,15 +249,21 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'planpilot',
+    index: '05',
     title: 'PlanPilot',
-    subtitle: 'Smart Appointment & Demand Management System for SMBs',
+    subtitle: 'KOBİ’ler İçin Akıllı Randevu & Talep Yönetim Sistemi',
     category: 'enterprise',
     categoryLabel: 'KOBİ & Talep Yönetimi',
     badge: 'Full-Stack REST & SQLite',
     year: '2026',
     featured: false,
-    image: '/images/han-kebap-food.jpg',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
     githubUrl: 'https://github.com/goktugis/planpilot',
+    accentColor: '#6366f1',
+    accentGlow: 'rgba(99, 102, 241, 0.45)',
+    gradient: 'from-indigo-500 via-blue-600 to-indigo-800',
+    coords: { x: 600, y: 550 },
+    connections: ['synapse-flow', 'han-kebap-steakhouse', 'dietitian-app'],
     description: "KOBİ'lerin müşteri taleplerini, randevularını ve teklif isteklerini dağınık WhatsApp mesajları yerine tek bir akıllı panelde toplamalarını sağlayan uçtan uca talep orkestrasyon sistemi.",
     highlights: [
       'Dinamik talep toplama formu ve otomatik randevu zamanlama algoritması',
@@ -246,8 +283,9 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'dietitian-app',
+    index: '06',
     title: 'DietitianApp',
-    subtitle: 'Full-Stack Clinical Nutrition & Patient Management System',
+    subtitle: 'Klinik Beslenme & Hasta Yönetim Platformu (.NET MVC)',
     category: 'enterprise',
     categoryLabel: 'Sağlık & .NET Mimarisi',
     badge: 'C# .NET MVC & Docker',
@@ -255,6 +293,11 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     featured: false,
     image: '/images/dietitian-app.png',
     githubUrl: 'https://github.com/goktugis/DietitianApp',
+    accentColor: '#14b8a6',
+    accentGlow: 'rgba(20, 184, 166, 0.45)',
+    gradient: 'from-teal-500 via-emerald-600 to-cyan-700',
+    coords: { x: 400, y: 620 },
+    connections: ['planpilot', 'hcc-survival-project'],
     description: 'Diyetisyenler ve klinikler için hasta takip, kişiselleştirilmiş beslenme programı hazırlama, makro/mikro besin hesaplama ve randevu yönetimini tek bir kurumsal çatıda birleştiren C# .NET uygulaması.',
     highlights: [
       'C# ASP.NET MVC mimarisinde kurumsal katmanlı yazılım deseni',
@@ -274,8 +317,9 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'hcc-survival-project',
+    index: '07',
     title: 'HCC Survival Prediction',
-    subtitle: 'Machine Learning Clinical Survival Prognosis Model',
+    subtitle: 'Klinik Onkoloji Sağkalım Tahminleme Makine Öğrenimi Modeli',
     category: 'ml-data',
     categoryLabel: 'Makine Öğrenimi & Biyomedikal',
     badge: 'Python & Scikit-Learn',
@@ -283,6 +327,11 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     featured: false,
     image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80',
     githubUrl: 'https://github.com/goktugis/machine_learning_HCC_survival_project',
+    accentColor: '#f43f5e',
+    accentGlow: 'rgba(244, 63, 94, 0.45)',
+    gradient: 'from-rose-500 via-red-600 to-pink-700',
+    coords: { x: 200, y: 550 },
+    connections: ['dietitian-app', 'goruntu-isleme'],
     description: 'Hepatosellüler Karsinoma (HCC karaciğer kanseri) hastalarının klinik ve laboratuvar verileri üzerinden sağkalım olasılıklarını tahmin eden gelişmiş makine öğrenimi modeli.',
     highlights: [
       'Klinik veri ön işleme, eksik veri doldurma (imputation) ve dengesiz sınıf analizi',
@@ -302,8 +351,9 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'goruntu-isleme',
+    index: '08',
     title: 'VisionTracker (Görüntü İşleme)',
-    subtitle: 'Real-Time Color Space Segmentation & Ball Tracking',
+    subtitle: 'Gerçek Zamanlı Renk Uzayı Segmentasyonu & Nesne Takibi',
     category: 'ml-data',
     categoryLabel: 'Bilgisayarlı Görü ve OpenCV',
     badge: 'OpenCV & Python',
@@ -311,6 +361,11 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     featured: false,
     image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
     githubUrl: 'https://github.com/goktugis/Goruntu-Isleme',
+    accentColor: '#ef4444',
+    accentGlow: 'rgba(239, 68, 68, 0.45)',
+    gradient: 'from-red-500 via-orange-600 to-amber-700',
+    coords: { x: 150, y: 350 },
+    connections: ['hcc-survival-project', 'oil-spill-project', 'neuro-shield'],
     description: 'Gerçek zamanlı video akışında kırmızı nesnelerin HSV renk uzayında morfolojik filtreleme ve kontur analiziyle yüksek FPS değerlerinde tespit ve merkez takibini gerçekleştiren bilgisayarlı görü projesi.',
     highlights: [
       'BGR -> HSV renk uzayı dönüşümü ve hassas renk eşikleme (thresholding)',
@@ -329,8 +384,9 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
   },
   {
     id: 'oil-spill-project',
+    index: '09',
     title: 'Oil Spill Detection',
-    subtitle: 'Satellite Radar Imagery Disaster Classification',
+    subtitle: 'Uydu Radar Spektral Verileri ile Deniz Felaketi Sınıflandırma',
     category: 'ml-data',
     categoryLabel: 'Uydu Algılama & Veri Analizi',
     badge: 'Python & MATLAB',
@@ -338,6 +394,11 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     featured: false,
     image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
     githubUrl: 'https://github.com/goktugis/machine_learning_oill_spill_project',
+    accentColor: '#0284c7',
+    accentGlow: 'rgba(2, 132, 199, 0.45)',
+    gradient: 'from-sky-500 via-blue-700 to-indigo-900',
+    coords: { x: 180, y: 150 },
+    connections: ['goruntu-isleme', 'neuro-shield'],
     description: 'Uzaktan algılama uydu radar ve spektral verilerini analiz ederek deniz yüzeyindeki petrol sızıntılarını ve çevresel kirlilik desenlerini sınıflandıran makine öğrenimi projesi.',
     highlights: [
       'Uydu spektral doku özniteliklerinin çıkarılması ve boyutsallık indirgeme',
@@ -355,6 +416,7 @@ async function encryptPayload(data: Uint8Array, key: CryptoKey, iv: Uint8Array) 
     }
   }
 ];
+
 
 export const SKILL_CATEGORIES = [
   {
@@ -403,7 +465,7 @@ export const PROFILE_INFO = {
   name: 'Göktuğ İşeri',
   title: 'Full-Stack & AI Systems Architect',
   location: 'Türkiye',
-  bio: 'Deterministik algoritmalar, sıfır-güven (zero-trust) yapay zeka savunma hatları, interaktif görsel DAG motorları ve yüksek performanslı modern web mimarileri inşa eden tutkulu yazılım mühendisi.',
+  bio: 'Deterministik algoritmalar, sıfır-güven yapay zeka savunma hatları, interaktif görsel DAG motorları ve yüksek performanslı modern web mimarileri inşa eden yazılım mühendisi.',
   stats: [
     { label: 'Açık Kaynak Sistem', value: '9+' },
     { label: 'İstemci Sıfır-Bilgi', value: '%100' },
