@@ -1,12 +1,14 @@
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import type { Project } from '../data/portfolioData';
 import { sound } from '../utils/audio';
+import type { GalleryTheme } from './GalleryLighting';
 
 interface FilmstripDockProps {
   projects: Project[];
   activeProject: Project;
   onSelectProject: (project: Project) => void;
   onInspectActive: () => void;
+  theme: GalleryTheme;
 }
 
 export function FilmstripDock({
@@ -14,9 +16,10 @@ export function FilmstripDock({
   activeProject,
   onSelectProject,
   onInspectActive,
+  theme,
 }: FilmstripDockProps) {
   const currentIndex = projects.findIndex((p) => p.id === activeProject.id);
-  const progressPercent = ((currentIndex + 1) / projects.length) * 100;
+  const isLight = theme === 'linen';
 
   const handlePrev = () => {
     sound.playTransition();
@@ -34,41 +37,46 @@ export function FilmstripDock({
 
   return (
     <div className="fixed bottom-3 md:bottom-5 inset-x-0 z-40 flex flex-col items-center pointer-events-none px-4">
-      {/* Floating Glassmorphic HUD Bar */}
-      <div className="pointer-events-auto p-1.5 md:p-2 rounded-2xl bg-[#080c16]/90 backdrop-blur-2xl border border-white/[0.12] shadow-2xl flex items-center gap-2 sm:gap-4 max-w-full overflow-x-auto no-scrollbar">
-        {/* Project Counter & Progress Pill */}
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] font-mono text-xs text-white shrink-0">
-          <span className="font-bold tracking-wider" style={{ color: activeProject.accentColor }}>
-            {activeProject.index}
+      {/* Floating Gallery Curatorial Index Bar */}
+      <div
+        className={`pointer-events-auto p-1.5 md:p-2 rounded-xl border shadow-xl flex items-center gap-2 sm:gap-4 max-w-full overflow-x-auto no-scrollbar transition-colors duration-500 ${
+          isLight
+            ? 'bg-[#ffffff]/90 backdrop-blur-xl border-stone-300 text-stone-900 shadow-monolith-light'
+            : theme === 'aluminum'
+            ? 'bg-[#1b1c21]/90 backdrop-blur-xl border-stone-700 text-stone-100 shadow-monolith'
+            : 'bg-[#111216]/90 backdrop-blur-xl border-stone-800 text-stone-100 shadow-monolith'
+        }`}
+      >
+        {/* Curatorial Catalog Counter */}
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded border font-mono text-xs shrink-0 ${
+            isLight
+              ? 'bg-stone-100 border-stone-200 text-stone-800'
+              : 'bg-white/[0.04] border-white/10 text-stone-300'
+          }`}
+        >
+          <span className="font-bold font-syne" style={{ color: activeProject.accentColor }}>
+            [{activeProject.index}]
           </span>
-          <span className="text-slate-500">/</span>
-          <span className="text-slate-400">
-            {projects.length < 10 ? `0${projects.length}` : projects.length}
-          </span>
-
-          {/* Mini Progress Bar */}
-          <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden hidden sm:block">
-            <div
-              className="h-full transition-all duration-500"
-              style={{
-                width: `${progressPercent}%`,
-                backgroundColor: activeProject.accentColor,
-              }}
-            />
-          </div>
+          <span className="opacity-40">/</span>
+          <span className="opacity-70 font-mono">0{projects.length}</span>
         </div>
 
         {/* Prev Button */}
         <button
           onClick={handlePrev}
           disabled={currentIndex <= 0}
-          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-white disabled:opacity-20 disabled:pointer-events-none transition-colors shrink-0"
-          title="Önceki Proje (←)"
+          className={`p-1.5 rounded border disabled:opacity-20 transition-colors shrink-0 ${
+            isLight
+              ? 'bg-stone-100 border-stone-200 hover:bg-stone-200 text-stone-800'
+              : 'bg-white/[0.04] border-white/10 hover:bg-white/10 text-stone-300'
+          }`}
+          title="Önceki Eser (←)"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
-        {/* Filmstrip Project Thumbnails / Dots */}
+        {/* Filmstrip Catalog Thumbnails */}
         <div className="flex items-center gap-1.5 shrink-0">
           {projects.map((project) => {
             const isActive = project.id === activeProject.id;
@@ -80,11 +88,13 @@ export function FilmstripDock({
                   onSelectProject(project);
                 }}
                 onMouseEnter={() => sound.playHover()}
-                title={`${project.index} // ${project.title}`}
-                className={`group relative transition-all duration-300 rounded-xl overflow-hidden flex items-center justify-center shrink-0 ${
+                title={`[${project.index}] ${project.title}`}
+                className={`group relative transition-all duration-300 rounded overflow-hidden flex items-center justify-center shrink-0 ${
                   isActive
-                    ? 'w-10 sm:w-16 h-8 ring-2 ring-white/80 scale-105'
-                    : 'w-7 sm:w-8 h-8 opacity-50 hover:opacity-100 hover:scale-105'
+                    ? isLight
+                      ? 'w-10 sm:w-14 h-8 ring-2 ring-stone-900 shadow-xs'
+                      : 'w-10 sm:w-14 h-8 ring-2 ring-white shadow-xs'
+                    : 'w-7 sm:w-8 h-8 opacity-40 hover:opacity-90'
                 }`}
               >
                 <img
@@ -95,11 +105,6 @@ export function FilmstripDock({
                     (e.target as HTMLImageElement).src =
                       'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
                   }}
-                />
-                <div
-                  className={`absolute inset-0 transition-opacity ${
-                    isActive ? 'bg-transparent' : 'bg-black/60 group-hover:bg-black/20'
-                  }`}
                 />
                 <span className="absolute bottom-0.5 right-1 font-mono text-[9px] font-bold text-white drop-shadow">
                   {project.index}
@@ -113,8 +118,12 @@ export function FilmstripDock({
         <button
           onClick={handleNext}
           disabled={currentIndex >= projects.length - 1}
-          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-white disabled:opacity-20 disabled:pointer-events-none transition-colors shrink-0"
-          title="Sonraki Proje (→)"
+          className={`p-1.5 rounded border disabled:opacity-20 transition-colors shrink-0 ${
+            isLight
+              ? 'bg-stone-100 border-stone-200 hover:bg-stone-200 text-stone-800'
+              : 'bg-white/[0.04] border-white/10 hover:bg-white/10 text-stone-300'
+          }`}
+          title="Sonraki Eser (→)"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -125,25 +134,29 @@ export function FilmstripDock({
             sound.playInspect();
             onInspectActive();
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-bold text-white transition-all shadow-md shrink-0"
-          style={{
-            backgroundColor: `${activeProject.accentColor}30`,
-            border: `1px solid ${activeProject.accentColor}80`,
-          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-xs font-bold transition-all shadow-xs shrink-0 ${
+            isLight
+              ? 'bg-stone-900 text-white hover:bg-stone-800'
+              : 'bg-stone-100 text-stone-950 hover:bg-white'
+          }`}
         >
-          <Sparkles className="w-3.5 h-3.5 fill-current" />
+          <Eye className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">İncele</span>
-          <span className="text-[10px] text-white/70 font-mono hidden md:inline">[SPACE]</span>
+          <span className="text-[10px] opacity-70 font-mono hidden md:inline">[SPACE]</span>
         </button>
       </div>
 
-      {/* Keyboard Shortcuts Hint Pill */}
-      <div className="hidden lg:flex items-center gap-3 mt-1.5 text-[10px] font-mono text-slate-500">
-        <span>[← / →] Projeler Arasında Akış</span>
+      {/* Keyboard Hint */}
+      <div
+        className={`hidden lg:flex items-center gap-3 mt-1.5 text-[10px] font-mono tracking-wider ${
+          isLight ? 'text-stone-500' : 'text-stone-500'
+        }`}
+      >
+        <span>[← / →] SALON GEZİNTİSİ</span>
         <span>•</span>
-        <span>[SPACE] Canlı Laboratuvar</span>
+        <span>[SPACE] LABORATUVAR</span>
         <span>•</span>
-        <span>[1-9] Hızlı Atlama</span>
+        <span>[1-9] DOĞRUDAN SALON</span>
       </div>
     </div>
   );

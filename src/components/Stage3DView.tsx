@@ -1,13 +1,15 @@
-import { ChevronLeft, ChevronRight, ExternalLink, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Eye } from 'lucide-react';
 import type { Project } from '../data/portfolioData';
-import { ProjectCardPreview } from './ProjectCardPreview';
+import { ProjectLiveSandbox } from './ProjectLiveSandbox';
 import { sound } from '../utils/audio';
+import type { GalleryTheme } from './GalleryLighting';
 
 interface Stage3DViewProps {
   projects: Project[];
   activeProject: Project;
   onSelectProject: (project: Project) => void;
   onInspectProject: (project: Project) => void;
+  theme: GalleryTheme;
 }
 
 export function Stage3DView({
@@ -15,8 +17,10 @@ export function Stage3DView({
   activeProject,
   onSelectProject,
   onInspectProject,
+  theme,
 }: Stage3DViewProps) {
   const currentIndex = projects.findIndex((p) => p.id === activeProject.id);
+  const isLight = theme === 'linen';
 
   const handlePrev = () => {
     sound.playTransition();
@@ -33,143 +37,151 @@ export function Stage3DView({
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-140px)] min-h-[620px] flex items-center justify-center overflow-hidden py-10 select-none">
-      {/* 3D Stage Carousel Floor */}
-      <div className="absolute bottom-10 w-[700px] h-[200px] rounded-[100%] bg-gradient-to-t from-cyan-500/15 to-transparent blur-3xl pointer-events-none" />
-
-      {/* Navigation Buttons */}
-      <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 z-30 flex justify-between pointer-events-none">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex <= 0}
-          className="pointer-events-auto p-4 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/10 text-white hover:bg-white/15 disabled:opacity-20 disabled:pointer-events-none transition-all shadow-xl"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-
-        <button
-          onClick={handleNext}
-          disabled={currentIndex >= projects.length - 1}
-          className="pointer-events-auto p-4 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/10 text-white hover:bg-white/15 disabled:opacity-20 disabled:pointer-events-none transition-all shadow-xl"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-      </div>
-
-      {/* 3D Perspective Stage */}
+    <div className="relative w-full h-[calc(100vh-140px)] min-h-[640px] flex items-center justify-center p-4 md:p-8 select-none">
+      {/* Editorial Dual-Page Book Container */}
       <div
-        className="relative w-full max-w-4xl h-[560px] flex items-center justify-center"
-        style={{ perspective: '1400px' }}
+        className={`relative w-full max-w-6xl h-full max-h-[620px] rounded-2xl border flex flex-col md:flex-row overflow-hidden transition-all duration-500 ${
+          isLight
+            ? 'bg-white border-stone-300 shadow-monolith-light text-stone-900'
+            : theme === 'aluminum'
+            ? 'bg-[#1b1c21] border-stone-700 shadow-monolith text-stone-100'
+            : 'bg-[#121418] border-stone-800 shadow-monolith text-stone-100'
+        }`}
       >
-        {projects.map((project, idx) => {
-          const offset = idx - currentIndex;
-          if (Math.abs(offset) > 2) return null; // Only render nearby cards for performance
+        {/* Left Page: Curated Art Monograph Page */}
+        <div className="w-full md:w-1/2 p-6 md:p-10 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800 flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-4">
+            {/* Catalog Top Line */}
+            <div className="flex items-center justify-between text-xs font-mono tracking-widest text-stone-500 uppercase border-b border-stone-200 dark:border-stone-800 pb-2">
+              <span>MONOGRAPH FOLIO [{activeProject.index} // 09]</span>
+              <span>{activeProject.categoryLabel}</span>
+            </div>
 
-          const isActive = offset === 0;
-          const translateX = offset * 320;
-          const translateZ = -Math.abs(offset) * 220;
-          const rotateY = offset * -28;
-          const opacity = isActive ? 1 : Math.abs(offset) === 1 ? 0.6 : 0.2;
-          const scale = isActive ? 1 : 0.85;
+            {/* Title & Tagline */}
+            <div className="space-y-1">
+              <h2 className="font-syne text-3xl md:text-4xl font-extrabold tracking-tight">
+                {activeProject.title}
+              </h2>
+              <p className="font-editorial-serif italic text-base md:text-lg text-stone-600 dark:text-stone-300">
+                "{activeProject.subtitle}"
+              </p>
+            </div>
 
-          return (
-            <div
-              key={project.id}
-              onClick={() => {
-                if (!isActive) {
-                  sound.playTransition();
-                  onSelectProject(project);
-                }
-              }}
-              className={`absolute top-0 w-[340px] sm:w-[480px] md:w-[580px] rounded-3xl transition-all duration-700 ease-out cursor-pointer ${
-                isActive ? 'z-20' : 'z-10 hover:opacity-85'
-              }`}
-              style={{
-                transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                opacity,
-              }}
-            >
-              {/* Outer Glow Halo */}
-              <div
-                className="absolute -inset-1 rounded-3xl blur-xl transition-opacity duration-500 pointer-events-none"
-                style={{
-                  backgroundColor: project.accentColor,
-                  opacity: isActive ? 0.35 : 0.05,
+            {/* Artwork Image Frame */}
+            <div className="relative h-44 sm:h-52 rounded-xl overflow-hidden bg-stone-900 border border-stone-200 dark:border-stone-800">
+              <img
+                src={activeProject.image}
+                alt={activeProject.title}
+                className="w-full h-full object-cover object-top"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
                 }}
               />
-
-              {/* Card Surface */}
-              <div
-                className="relative rounded-3xl bg-[#0b0f1c]/90 backdrop-blur-2xl border transition-all duration-500 overflow-hidden shadow-2xl flex flex-col"
-                style={{
-                  borderColor: isActive ? `${project.accentColor}80` : 'rgba(255, 255, 255, 0.08)',
-                  boxShadow: isActive
-                    ? `0 25px 60px -10px ${project.accentColor}30, 0 0 0 1px ${project.accentColor}40`
-                    : '0 15px 35px rgba(0,0,0,0.6)',
-                }}
-              >
-                {/* Image */}
-                <div className="relative h-48 sm:h-56 overflow-hidden bg-black/60">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover object-top"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f1c] via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/70 border border-white/20 font-mono text-[11px] text-white">
-                    {project.index} // {project.badge}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 space-y-3">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{project.title}</h3>
-                    <p className="text-xs text-slate-400 line-clamp-1">{project.subtitle}</p>
-                  </div>
-
-                  <ProjectCardPreview project={project} />
-
-                  {/* Actions */}
-                  {isActive && (
-                    <div className="pt-2 flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          sound.playInspect();
-                          onInspectProject(project);
-                        }}
-                        className="flex-1 py-2.5 px-4 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 text-white shadow-md"
-                        style={{ backgroundColor: project.accentColor }}
-                      >
-                        <span>Projeyi İncele & Simülatör</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-
-                      <a
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          sound.playTick();
-                        }}
-                        className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/15 border border-white/10 text-white"
-                        title="GitHub"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
-                  )}
-                </div>
+              <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white">
+                {activeProject.badge}
               </div>
             </div>
-          );
-        })}
+
+            {/* Curatorial Text */}
+            <p className="text-xs md:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+              {activeProject.description}
+            </p>
+          </div>
+
+          {/* Left Page Footer: Provenance & Specs */}
+          <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between text-xs font-mono">
+            <span className="text-stone-500">MİMARİ: {activeProject.techStack.slice(0, 3).join(' • ')}</span>
+            <a
+              href={activeProject.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 font-bold underline"
+            >
+              <span>GitHub</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+
+        {/* Right Page: Live Interactive Installation Panel */}
+        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between text-xs font-mono tracking-widest text-stone-500 uppercase border-b border-stone-200 dark:border-stone-800 pb-2">
+              <span>CANLI İNTERAKTİF DENEY İSTASYONU</span>
+              <span>GERÇEK ZAMANLI</span>
+            </div>
+
+            {/* Live Sandbox Component */}
+            <ProjectLiveSandbox project={activeProject} />
+
+            {/* Key Spec Highlights */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-mono tracking-wider text-stone-500 uppercase block">
+                ÖNE ÇIKAN MÜHENDİSLİK SPESİFİKASYONLARI
+              </span>
+              <div className="space-y-1.5 text-xs text-stone-700 dark:text-stone-300">
+                {activeProject.highlights.slice(0, 3).map((h, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="text-stone-400 mt-0.5">•</span>
+                    <span>{h}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Page Footer: Navigation Controls */}
+          <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between">
+            <button
+              onClick={() => {
+                sound.playInspect();
+                onInspectProject(activeProject);
+              }}
+              className={`px-4 py-2 rounded text-xs font-mono font-bold flex items-center gap-2 ${
+                isLight
+                  ? 'bg-stone-900 text-white hover:bg-stone-800'
+                  : 'bg-stone-100 text-stone-950 hover:bg-white'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Tam Ekran İncele</span>
+            </button>
+
+            {/* Monograph Page Flip Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                disabled={currentIndex <= 0}
+                className={`p-2 rounded border transition-colors disabled:opacity-20 ${
+                  isLight
+                    ? 'bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200'
+                    : 'bg-stone-800 border-stone-700 text-stone-100 hover:bg-stone-700'
+                }`}
+                title="Önceki Sayfa"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <span className="text-xs font-mono text-stone-500">
+                {currentIndex + 1} / {projects.length}
+              </span>
+
+              <button
+                onClick={handleNext}
+                disabled={currentIndex >= projects.length - 1}
+                className={`p-2 rounded border transition-colors disabled:opacity-20 ${
+                  isLight
+                    ? 'bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200'
+                    : 'bg-stone-800 border-stone-700 text-stone-100 hover:bg-stone-700'
+                }`}
+                title="Sonraki Sayfa"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

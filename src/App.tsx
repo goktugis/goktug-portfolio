@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PROJECTS, type Project } from './data/portfolioData';
-import { DynamicAuraBackground } from './components/DynamicAuraBackground';
+import { GalleryLighting, type GalleryTheme } from './components/GalleryLighting';
 import { FlowNavbar, type ViewMode } from './components/FlowNavbar';
 import { HorizonStreamView } from './components/HorizonStreamView';
 import { GalaxyMapView } from './components/GalaxyMapView';
@@ -13,6 +13,7 @@ import { sound } from './utils/audio';
 export function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('stream');
+  const [theme, setTheme] = useState<GalleryTheme>('obsidian');
   const [activeProjectId, setActiveProjectId] = useState<string>(PROJECTS[0].id);
   const [inspectProject, setInspectProject] = useState<Project | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -128,17 +129,21 @@ export function App() {
     handleToggleMute,
   ]);
 
-  return (
-    <div className="relative min-h-screen bg-[#07090e] text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden font-sans">
-      {/* Dynamic Chromatic Aura & Particle Canvas Background */}
-      <DynamicAuraBackground activeProject={activeProject} />
+  const rootBgClass =
+    theme === 'linen'
+      ? 'bg-[#f6f4ef] text-stone-900 selection:bg-stone-900 selection:text-white'
+      : theme === 'aluminum'
+      ? 'bg-[#191a1e] text-stone-100 selection:bg-amber-500/30 selection:text-amber-200'
+      : 'bg-[#0e0f12] text-stone-100 selection:bg-stone-100/20 selection:text-white';
 
-      {/* Cyber Grid Texture Overlay */}
-      <div className="fixed inset-0 bg-cyber-grid pointer-events-none opacity-25 z-0" />
+  return (
+    <div className={`relative min-h-screen ${rootBgClass} overflow-x-hidden transition-colors duration-700`}>
+      {/* Architectural Gallery Lighting Canvas & Floor Texture */}
+      <GalleryLighting activeProject={activeProject} theme={theme} />
 
       {/* App Shell */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Top HUD Navbar */}
+        {/* Top Curator Navbar */}
         <FlowNavbar
           activeProject={activeProject}
           selectedCategory={selectedCategory}
@@ -147,12 +152,14 @@ export function App() {
           }}
           viewMode={viewMode}
           onChangeViewMode={(mode) => setViewMode(mode)}
+          theme={theme}
+          onChangeTheme={(t) => setTheme(t)}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           onOpenShortcuts={() => setIsShortcutsOpen(true)}
         />
 
-        {/* Main Stage Runway */}
+        {/* Main Exhibition Promenade / Floorplan / Monograph */}
         <main className="flex-1 flex flex-col justify-center pt-16 pb-20">
           {viewMode === 'stream' && (
             <HorizonStreamView
@@ -160,6 +167,7 @@ export function App() {
               activeProject={activeProject}
               onSelectProject={handleSelectProject}
               onInspectProject={(proj) => setInspectProject(proj)}
+              theme={theme}
             />
           )}
 
@@ -169,6 +177,7 @@ export function App() {
               activeProject={activeProject}
               onSelectProject={handleSelectProject}
               onInspectProject={(proj) => setInspectProject(proj)}
+              theme={theme}
             />
           )}
 
@@ -178,29 +187,33 @@ export function App() {
               activeProject={activeProject}
               onSelectProject={handleSelectProject}
               onInspectProject={(proj) => setInspectProject(proj)}
+              theme={theme}
             />
           )}
         </main>
 
-        {/* Bottom Floating Filmstrip Dock HUD */}
+        {/* Bottom Curatorial Tape & Filmstrip Dock */}
         <FilmstripDock
           projects={filteredProjects}
           activeProject={activeProject}
           onSelectProject={handleSelectProject}
           onInspectActive={() => setInspectProject(activeProject)}
+          theme={theme}
         />
       </div>
 
-      {/* Deep Dive Holographic Modal */}
+      {/* Deep Dive Exhibition Vitrine Modal */}
       <DeepDiveModal
         project={inspectProject}
         onClose={() => setInspectProject(null)}
+        theme={theme}
       />
 
-      {/* Keyboard Shortcuts Guide Modal */}
+      {/* Keyboard Shortcuts Modal */}
       <ShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+        theme={theme}
       />
     </div>
   );
