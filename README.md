@@ -57,6 +57,14 @@
 
 ---
 
+## 🚀 Canlı Yayın (Render Deployment)
+
+Bu portfolyo **Render** üzerinde yüksek performanslı statik web sitesi (CDN + Global SSL) olarak çalışacak şekilde yapılandırılmıştır (`render.yaml` Blueprint entegrasyonu mevcuttur).
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/goktugis/goktug-portfolio)
+
+---
+
 ## 💻 Kurulum & Yerel Çalıştırma
 
 ```bash
